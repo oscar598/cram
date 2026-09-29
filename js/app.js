@@ -346,9 +346,17 @@ function renderTriage() {
   onKey = e => { if (e.key === "Enter" && plan) startRun(plan); };
 }
 
-function startRun(plan) {
+function startRun(plan, confirmed = false) {
   unlockAudio();
-  if (S.run && !S.run.finished && !confirm("You have a run in progress. Start a new one and drop it?")) return;
+  if (S.run && !S.run.finished && !confirmed) {
+    modal(`<h2>Replace your run?</h2><p>You have a run in progress. Starting a new one drops it.</p>
+      <div class="row" style="margin-top:16px"><span class="spacer"></span><button class="btn primary" id="keep">Keep it</button><button class="btn" id="drop">Start new run</button></div>`,
+    (root, close) => {
+      $("#keep", root).onclick = close;
+      $("#drop", root).onclick = () => { close(); startRun(plan, true); };
+    });
+    return;
+  }
   S.run = { id: uid(), deck: S.deck, plan, idx: 0, phase: "intro", ranked: true, items: {}, mastery: {}, log: [], results: [],
     prediction: null, startedAt: Date.now(), lastSeen: Date.now(), finished: false, recapDone: false };
   // The deck holds everything the run needs; drop raw file text so saves stay small.
